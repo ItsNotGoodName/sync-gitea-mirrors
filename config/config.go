@@ -20,8 +20,8 @@ type Config struct {
 	SrcOwner string `env:"SRC_OWNER"`
 	// SrcRepos       []string `env:"SRC_REPOS" envSeparator:" "`
 	// SrcSkip        []string `env:"SRC_SKIP" envSeparator:" "`
-	// SrcSkipForks   bool     `env:"SRC_SKIP_FORKS"`
-	// SrcSkipPrivate bool     `env:"SRC_SKIP_PRIVATE"`
+	SrcSkipForks   bool `env:"SRC_SKIP_FORKS"`
+	SrcSkipPrivate bool `env:"SRC_SKIP_PRIVATE"`
 
 	SyncAll            bool `env:"SYNC_ALL"`
 	SyncTopics         bool `env:"SYNC_TOPICS"`
@@ -44,6 +44,8 @@ func New() *Config {
 func (cfg *Config) WithFlags() *Config {
 	flag.StringVar(&cfg.SrcToken, "src-token", "", "Token for source service.")
 	flag.StringVar(&cfg.SrcOwner, "src-owner", "", "Owner of source repositories to mirror.")
+	flag.BoolVar(&cfg.SrcSkipForks, "src-skip-forks", false, "Skip source repositories that are forks.")
+	flag.BoolVar(&cfg.SrcSkipPrivate, "src-skip-private", false, "Skip source repositories that are private.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Synchronize everything.")
 	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Synchronize topics.")
 	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Synchronize description.")
@@ -74,10 +76,6 @@ func (cfg *Config) ParseAndValidate() error {
 	if cfg.SrcOwner == "" && cfg.SrcToken == "" {
 		return fmt.Errorf("SRC_OWNER or SRC_TOKEN not set")
 	}
-
-	// if cfg.SrcOwner != "" && cfg.SrcToken != "" {
-	// 	return fmt.Errorf("SRC_OWNER and SRC_TOKEN cannot both be set")
-	// }
 
 	if cfg.DestURL == "" {
 		return fmt.Errorf("DEST_URL not set")

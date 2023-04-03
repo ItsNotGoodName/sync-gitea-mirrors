@@ -22,6 +22,10 @@ func main() {
 		log.Fatal("could not parse config", zap.Error(err))
 	}
 
+	if cfg.SrcOwner != "" && cfg.SrcToken != "" {
+		log.Warn("settings both SRC_OWNER and SRC_TOKEN will only display public repos")
+	}
+
 	// Create clients
 	ctx := context.Background()
 	hubClient := hub.NewClient(ctx, cfg.SrcToken)
@@ -30,7 +34,7 @@ func main() {
 		log.Fatal("could not create Gitea client", zap.Error(err))
 	}
 
-	repos, err := hub.GetRepos(ctx, hubClient, cfg.SrcOwner)
+	repos, err := hub.GetRepos(ctx, hubClient, cfg.SrcOwner, cfg.SrcSkipPrivate)
 	if err != nil {
 		log.Fatal("could not get GitHub repos", zap.Error(err))
 	}
@@ -46,6 +50,10 @@ func main() {
 	}
 
 	for _, repo := range repos {
+		if cfg.SrcSkipForks && repo.GetFork() {
+			continue
+		}
+
 		owner := cfg.DestOwner
 		if owner == "" {
 			owner = repo.Owner.GetLogin()

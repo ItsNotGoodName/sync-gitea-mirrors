@@ -9,7 +9,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetRepos(ctx context.Context, client *github.Client, owner string) ([]*github.Repository, error) {
+func GetRepos(ctx context.Context, client *github.Client, owner string, skipPrivate bool) ([]*github.Repository, error) {
+	visiblity := "all"
+	if skipPrivate {
+		visiblity = "public"
+	}
 	var repos []*github.Repository
 	page := 1
 	limit := 100
@@ -17,6 +21,7 @@ func GetRepos(ctx context.Context, client *github.Client, owner string) ([]*gith
 		pagedRepos, resp, err := client.Repositories.List(ctx, owner,
 			&github.RepositoryListOptions{
 				Sort:        "created",
+				Visibility:  visiblity,
 				ListOptions: github.ListOptions{Page: page, PerPage: limit},
 			})
 		if err != nil {
