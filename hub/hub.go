@@ -47,10 +47,10 @@ func NewClient(ctx context.Context, token string) *github.Client {
 	return github.NewClient(tc)
 }
 
-func Migrate(client *gitea.Client, opt gitea.MigrateRepoOption, hubRepo *github.Repository, token string) error {
+func Migrate(client *gitea.Client, opt gitea.MigrateRepoOption, hubRepo *github.Repository, token string) (*gitea.Repository, error) {
 	opt.Service = gitea.GitServiceGithub
 	opt.CloneAddr = hubRepo.GetCloneURL()
 	opt.AuthToken = token
-	_, _, err := client.MigrateRepo(opt)
-	return err
+	repo, _, err := client.MigrateRepo(opt)
+	return repo, err
 }

@@ -69,14 +69,15 @@ func main() {
 		// Migrate new repo
 		if teaRepo == nil {
 			fmt.Println("Migrating", repo.GetFullName())
-			if err = hub.Migrate(client, gitea.MigrateRepoOption{
+			if teaRepo, err = hub.Migrate(client, gitea.MigrateRepoOption{
 				Mirror:    true,
 				RepoOwner: owner,
 				RepoName:  name,
+				Private:   repo.GetPrivate(),
 			}, repo, cfg.SrcToken); err != nil {
 				log.Error("could not migrate repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+				continue
 			}
-			continue
 		}
 
 		// Sync existing repo
