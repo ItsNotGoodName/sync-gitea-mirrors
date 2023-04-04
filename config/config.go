@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/caarlos0/env/v7"
 )
@@ -15,18 +16,17 @@ const (
 )
 
 type Config struct {
-	// SrcURL         string   `env:"SRC_URL"`
-	// SrcRepos       []string `env:"SRC_REPOS" envSeparator:" "`
-	// SrcSkip        []string `env:"SRC_SKIP" envSeparator:" "`
+	Source      Source   `env:"SOURCE"`
+	GitHubOwner string   `env:"GITHUB_OWNER"`
+	GitHubToken string   `env:"GITHUB_TOKEN"`
+	GiteaOwner  string   `env:"GITEA_OWNER"`
+	GiteaToken  string   `env:"GITEA_TOKEN"`
+	GiteaURL    string   `env:"GITEA_URL"`
+	Skip        []string `env:"SKIP" envSeparator:" "`
+	SkipForks   bool     `env:"SKIP_FORKS"`
+	SkipPrivate bool     `env:"SKIP_PRIVATE"`
 
-	Source      Source `env:"SRC"`
-	GitHubOwner string `env:"GITHUB_OWNER"`
-	GitHubToken string `env:"GITHUB_TOKEN"`
-	GiteaOwner  string `env:"GITEA_OWNER"`
-	GiteaToken  string `env:"GITEA_TOKEN"`
-	GiteaURL    string `env:"GITEA_URL"`
-	SkipForks   bool   `env:"SKIP_FORKS"`
-	SkipPrivate bool   `env:"SKIP_PRIVATE"`
+	MigrateWiki bool `env:"MIGRATE_WIKI"`
 
 	SyncAll            bool `env:"SYNC_ALL"`
 	SyncTopics         bool `env:"SYNC_TOPICS"`
@@ -45,14 +45,16 @@ const DefaultMirrorInterval = "8h0m0s"
 func New() *Config {
 	cfg := Config{}
 
-	flag.StringVar((*string)(&cfg.Source), "src", string(SourceGitHub), "Source service.")
+	flag.StringVar((*string)(&cfg.Source), "source", string(SourceGitHub), "Source service.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub repositories to mirror.")
 	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for GitHub for mirroring and syncing.")
 	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea repositories to mirror.")
 	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for Gitea for mirroring and syncing.")
 	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL for the source Gitea instance.")
+	skip := flag.String("skip", "", "List of source repositories to skip seperated by ' '.")
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip source repositories that are forks.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip source repositories that are private.")
+	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Synchronize everything.")
 	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Synchronize repository topics.")
 	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Synchronize repository description.")
@@ -64,6 +66,8 @@ func New() *Config {
 	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the Gitea instance.")
 
 	flag.Parse()
+
+	cfg.Skip = strings.Split(*skip, " ")
 
 	return &cfg
 }
@@ -93,7 +97,7 @@ func (cfg *Config) ParseAndValidate() error {
 			return fmt.Errorf("GITEA_URL not set")
 		}
 	default:
-		return fmt.Errorf("invalid SRC: %s", cfg.Source)
+		return fmt.Errorf("invalid SOURCE: %s", cfg.Source)
 	}
 
 	if cfg.DestURL == "" {
