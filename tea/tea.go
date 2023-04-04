@@ -21,10 +21,10 @@ func Convert(r *gitea.Repository, topics []string) SourceRepository {
 			Archived:    r.Archived,
 			PushedAt:    r.Updated,
 		},
-		Owner:    r.Owner.UserName,
-		Name:     r.Name,
-		Fork:     r.Fork,
-		CloneURL: r.CloneURL,
+		Owner: r.Owner.UserName,
+		Name:  r.Name,
+		Fork:  r.Fork,
+		URLS:  []string{r.CloneURL},
 	}
 }
 

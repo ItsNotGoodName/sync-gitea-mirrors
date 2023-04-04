@@ -1,13 +1,17 @@
 package tea
 
-import "strings"
+import (
+	"strings"
+
+	"code.gitea.io/sdk/gitea"
+)
 
 type SourceRepository struct {
 	SyncRepository
-	Owner    string
-	Name     string
-	Fork     bool
-	CloneURL string
+	Owner string
+	Name  string
+	Fork  bool
+	URLS  []string
 }
 
 func (sr SourceRepository) GetFullName() string {
@@ -24,4 +28,19 @@ func (sr SourceRepository) Is(nameOrPath string) bool {
 
 	_, after, _ := strings.Cut(nameOrPath, "/")
 	return after == repoName
+}
+
+func (sr SourceRepository) IsMyMirror(teaRepo *gitea.Repository) bool {
+	if !teaRepo.Mirror {
+		return false
+	}
+
+	for _, url := range sr.URLS {
+		if teaRepo.OriginalURL == url {
+			return true
+		}
+	}
+
+	return false
+
 }

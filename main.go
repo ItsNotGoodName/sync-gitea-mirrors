@@ -58,6 +58,7 @@ Loop:
 			}
 		}
 
+		// Destination repo name and owner
 		owner := cfg.DestOwner
 		if owner == "" {
 			owner = repo.Owner
@@ -85,6 +86,9 @@ Loop:
 				log.Error("could not migrate repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
 				continue
 			}
+		} else if !repo.IsMyMirror(teaRepo) {
+			fmt.Println("Skipping", repo.GetFullName(), "does not belong to mirror", teaRepo.FullName)
+			continue
 		}
 
 		// Sync existing repo
