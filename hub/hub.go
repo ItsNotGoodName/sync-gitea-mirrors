@@ -29,7 +29,7 @@ func Convert(r *github.Repository) tea.SourceRepository {
 		Owner: r.GetOwner().GetLogin(),
 		Name:  r.GetName(),
 		Fork:  r.GetFork(),
-		URLS:  []string{r.GetCloneURL(), r.GetURL()},
+		URLS:  []string{r.GetCloneURL(), r.GetHTMLURL()},
 	}
 }
 

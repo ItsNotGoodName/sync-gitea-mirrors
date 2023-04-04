@@ -1,6 +1,7 @@
 package tea
 
 import (
+	"fmt"
 	"strings"
 
 	"code.gitea.io/sdk/gitea"
@@ -36,10 +37,12 @@ func (sr SourceRepository) IsMyMirror(teaRepo *gitea.Repository) bool {
 	}
 
 	for _, url := range sr.URLS {
-		if teaRepo.OriginalURL == url {
+		if strings.ToLower(teaRepo.OriginalURL) == strings.ToLower(url) {
 			return true
 		}
 	}
+
+	panic(fmt.Sprint(teaRepo.OriginalURL, sr.URLS))
 
 	return false
 
