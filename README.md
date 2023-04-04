@@ -6,6 +6,8 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 
 | Environment Variable   | Default  | Required          | Description                                                                                                         |
 | ---------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `DAEMON`               | 0        |                   | Seconds between each run where 0 means running only once.                                                           |
+| `DAEMON_SKIP_FIRST`    | 0        |                   | Skip first daemon run.                                                                                              |
 | `GITHUB_OWNER`         | ""       | maybe<sub>1</sub> | Owner of GitHub source repositories.                                                                                |
 | `GITHUB_TOKEN`         | ""       | maybe<sub>1</sub> | Token for accessing GitHub.                                                                                         |
 | `GITEA_OWNER`          | ""       | maybe<sub>2</sub> | Owner of Gitea source repositories.                                                                                 |

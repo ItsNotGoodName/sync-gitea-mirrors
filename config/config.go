@@ -16,6 +16,9 @@ const (
 )
 
 type Config struct {
+	Daemon          int  `env:"DAEMON"`
+	DaemonSkipFirst bool `env:"DAEMON_SKIP_FIRST"`
+
 	Source      Source
 	GitHubOwner string   `env:"GITHUB_OWNER"`
 	GitHubToken string   `env:"GITHUB_TOKEN"`
@@ -45,6 +48,8 @@ const DefaultMirrorInterval = "8h0m0s"
 func New() *Config {
 	cfg := Config{}
 
+	flag.IntVar(&cfg.Daemon, "daemon", 0, "Seconds between each run where 0 means running only once.")
+	flag.BoolVar(&cfg.DaemonSkipFirst, "daemon-skip-first", false, "Skip first run.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub source repositories.")
 	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for accessing GitHub.")
 	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
@@ -115,6 +120,10 @@ func (cfg *Config) ParseAndValidate() error {
 
 	if cfg.DestToken == "" {
 		return fmt.Errorf("DEST_TOKEN not set")
+	}
+
+	if cfg.Daemon < 60 && cfg.Daemon != 0 {
+		return fmt.Errorf("DAEMON interval too quick: %d", cfg.Daemon)
 	}
 
 	return nil

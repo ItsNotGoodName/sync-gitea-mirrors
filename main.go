@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ItsNotGoodName/sync-gitea-mirrors/config"
 	"github.com/ItsNotGoodName/sync-gitea-mirrors/hub"
@@ -26,7 +27,7 @@ func main() {
 
 	if cfg.Source == config.SourceGitHub {
 		if cfg.GitHubOwner != "" && cfg.GitHubToken != "" {
-			log.Warn("settings both GITHUB_OWNER and GITHUB_TOKEN will only display public repos")
+			log.Warn("setting both GITHUB_OWNER and GITHUB_TOKEN will only display public repos")
 		}
 	}
 
@@ -38,6 +39,23 @@ func main() {
 		DestMirrorInterval: cfg.DestMirrorInterval,
 	}
 
+	if cfg.Daemon != 0 {
+		// Daemon
+		if !cfg.DaemonSkipFirst {
+			run(cfg, &syncConfig)
+		}
+		interval := time.Duration(cfg.Daemon) * time.Second
+		for {
+			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
+			time.Sleep(interval)
+			run(cfg, &syncConfig)
+		}
+	} else {
+		run(cfg, &syncConfig)
+	}
+}
+
+func run(cfg *config.Config, syncConfig *tea.SyncConfig) {
 	// Create client
 	client, err := gitea.NewClient(cfg.DestURL, gitea.SetToken(cfg.DestToken))
 	if err != nil {
@@ -51,6 +69,7 @@ func main() {
 
 Loop:
 	for _, repo := range repos {
+		// Skip
 		for _, skipRepo := range cfg.SkipRepos {
 			if repo.Is(skipRepo) {
 				fmt.Println("Skipping", repo.GetFullName())

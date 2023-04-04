@@ -69,7 +69,7 @@ type SyncOutput struct {
 	SyncMirror           bool
 }
 
-func Sync(client *gitea.Client, teaRepo *gitea.Repository, sourceRepo *SyncRepository, config SyncConfig) (SyncOutput, error) {
+func Sync(client *gitea.Client, teaRepo *gitea.Repository, sourceRepo *SyncRepository, config *SyncConfig) (SyncOutput, error) {
 	owner := teaRepo.Owner.UserName
 	repoName := teaRepo.Name
 
