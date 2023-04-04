@@ -8,6 +8,8 @@ import (
 	"github.com/caarlos0/env/v7"
 )
 
+const DefaultDestMirrorInterval = "8h0m0s"
+
 type Source string
 
 const (
@@ -29,6 +31,7 @@ type Config struct {
 	SkipForks   bool     `env:"SKIP_FORKS"`
 	SkipPrivate bool     `env:"SKIP_PRIVATE"`
 
+	MigrateAll  bool `env:"MIGRATE_ALL"`
 	MigrateWiki bool `env:"MIGRATE_WIKI"`
 
 	SyncAll            bool `env:"SYNC_ALL"`
@@ -43,12 +46,10 @@ type Config struct {
 	DestMirrorInterval string `env:"DEST_MIRROR_INTERVAL"`
 }
 
-const DefaultMirrorInterval = "8h0m0s"
-
 func New() *Config {
 	cfg := Config{}
 
-	flag.IntVar(&cfg.Daemon, "daemon", 0, "Seconds between each run where 0 means running only once.")
+	flag.IntVar(&cfg.Daemon, "daemon", 0, "Seconds between each run where 0 means running only once (e.g. `86400` is a day).")
 	flag.BoolVar(&cfg.DaemonSkipFirst, "daemon-skip-first", false, "Skip first run.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub source repositories.")
 	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for accessing GitHub.")
@@ -58,6 +59,7 @@ func New() *Config {
 	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
+	flag.BoolVar(&cfg.MigrateAll, "migrate-all", false, "Migrate everything.")
 	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki from source repositories.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Sync everything.")
 	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Sync topics of repository.")
@@ -67,7 +69,7 @@ func New() *Config {
 	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance. (required)")
 	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for accessing the destination Gitea instance. (required)")
 	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrored repositories on the destination Gitea instance.")
-	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the destination Gitea instance.")
+	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultDestMirrorInterval, "Default mirror interval for new migrations on the destination Gitea instance.")
 
 	flag.Parse()
 
@@ -79,6 +81,10 @@ func New() *Config {
 func (cfg *Config) ParseAndValidate() error {
 	if err := env.Parse(cfg); err != nil {
 		return err
+	}
+
+	if cfg.MigrateAll {
+		cfg.MigrateWiki = true
 	}
 
 	if cfg.SyncAll {
