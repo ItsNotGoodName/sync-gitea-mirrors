@@ -41,7 +41,7 @@ func main() {
 	// Create client
 	client, err := gitea.NewClient(cfg.DestURL, gitea.SetToken(cfg.DestToken))
 	if err != nil {
-		log.Fatal("could not create dest Gitea client", zap.Error(err))
+		log.Fatal("could not create destination Gitea client", zap.Error(err))
 	}
 
 	// Get repositories based config
@@ -64,9 +64,9 @@ Loop:
 		}
 		name := repo.Name
 
-		teaRepo, err := tea.GetRepo(client, owner, name)
+		teaRepo, err := tea.GetRepoOrNil(client, owner, name)
 		if err != nil {
-			log.Error("could not get dest repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+			log.Error("could not get destination repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
 			continue
 		}
 
@@ -122,7 +122,7 @@ func getSourceRepos(cfg *config.Config) ([]tea.SourceRepository, gitea.MigrateRe
 		// List repositories
 		repos, err := hub.ListRepos(ctx, hubClient, cfg.GitHubOwner, cfg.SkipPrivate, cfg.SkipForks)
 		if err != nil {
-			log.Fatal("could not get GitHub repos", zap.Error(err))
+			log.Fatal("could not get GitHub repos", zap.String("owner", cfg.GitHubOwner), zap.Error(err))
 		}
 
 		return hub.ConvertList(repos), gitea.MigrateRepoOption{
@@ -133,13 +133,13 @@ func getSourceRepos(cfg *config.Config) ([]tea.SourceRepository, gitea.MigrateRe
 		// Create Gitea client
 		srcClient, err := gitea.NewClient(cfg.GiteaURL, gitea.SetToken(cfg.GiteaToken))
 		if err != nil {
-			log.Fatal("could not create source Gitea client", zap.Error(err))
+			log.Fatal("could not create source Gitea client", zap.String("url", cfg.GiteaURL), zap.Error(err))
 		}
 
 		// List repositories
 		repos, err := tea.ListRepos(srcClient, cfg.GiteaOwner, cfg.SkipPrivate, cfg.SkipForks)
 		if err != nil {
-			log.Fatal("could not set source Gitea repos", zap.Error(err))
+			log.Fatal("could not set source Gitea repos", zap.String("owner", cfg.GitHubOwner), zap.Error(err))
 		}
 
 		var getTopics func(r *gitea.Repository) []string

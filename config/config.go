@@ -16,7 +16,7 @@ const (
 )
 
 type Config struct {
-	Source      Source   `env:"SOURCE"`
+	Source      Source
 	GitHubOwner string   `env:"GITHUB_OWNER"`
 	GitHubToken string   `env:"GITHUB_TOKEN"`
 	GiteaOwner  string   `env:"GITEA_OWNER"`
@@ -45,13 +45,12 @@ const DefaultMirrorInterval = "8h0m0s"
 func New() *Config {
 	cfg := Config{}
 
-	flag.StringVar((*string)(&cfg.Source), "source", string(SourceGitHub), "Source service.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub repositories to mirror.")
-	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for GitHub for mirroring and syncing.")
+	flag.StringVar(&cfg.GitHubToken, "github-token", "", "GitHub token for mirroring and syncing.")
 	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea repositories to mirror.")
-	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for Gitea for mirroring and syncing.")
+	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Gitea token for mirroring and syncing.")
 	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL for the source Gitea instance.")
-	skip := flag.String("skip", "", "List of source repositories to skip seperated by ' '.")
+	skip := flag.String("skip", "", `List of source repositories to skip seperated by " " (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip source repositories that are forks.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip source repositories that are private.")
 	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki.")
@@ -62,8 +61,8 @@ func New() *Config {
 	flag.BoolVar(&cfg.SyncMirrorInterval, "sync-mirror-interval", false, "Disable periodic sync if source repository is archived.")
 	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance.")
 	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for the destination Gitea instance.")
-	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrors on the Gitea instance.")
-	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the Gitea instance.")
+	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrors on the destination Gitea instance.")
+	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the destination Gitea instance.")
 
 	flag.Parse()
 
@@ -84,6 +83,16 @@ func (cfg *Config) ParseAndValidate() error {
 		cfg.SyncVisibility = true
 	}
 
+	// Infer source
+	if cfg.GitHubOwner != "" || cfg.GitHubToken != "" {
+		cfg.Source = SourceGitHub
+	} else if cfg.GiteaOwner != "" || cfg.GiteaToken != "" || cfg.GiteaURL != "" {
+		cfg.Source = SourceGitea
+	} else {
+		return fmt.Errorf("setup GitHub or Gitea as a repository source")
+	}
+
+	// Validate source config
 	switch cfg.Source {
 	case SourceGitHub:
 		if cfg.GitHubOwner == "" && cfg.GitHubToken == "" {

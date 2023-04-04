@@ -28,7 +28,7 @@ func Convert(r *gitea.Repository, topics []string) SourceRepository {
 	}
 }
 
-func GetRepo(client *gitea.Client, owner, repoName string) (*gitea.Repository, error) {
+func GetRepoOrNil(client *gitea.Client, owner, repoName string) (*gitea.Repository, error) {
 	repo, teaRepoResp, err := client.GetRepo(owner, repoName)
 	if err != nil {
 		if teaRepoResp != nil && teaRepoResp.StatusCode == 404 {
