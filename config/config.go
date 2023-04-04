@@ -22,7 +22,7 @@ type Config struct {
 	GiteaOwner  string   `env:"GITEA_OWNER"`
 	GiteaToken  string   `env:"GITEA_TOKEN"`
 	GiteaURL    string   `env:"GITEA_URL"`
-	Skip        []string `env:"SKIP" envSeparator:" "`
+	SkipRepos   []string `env:"SKIP_REPOS" envSeparator:" "`
 	SkipForks   bool     `env:"SKIP_FORKS"`
 	SkipPrivate bool     `env:"SKIP_PRIVATE"`
 
@@ -45,28 +45,28 @@ const DefaultMirrorInterval = "8h0m0s"
 func New() *Config {
 	cfg := Config{}
 
-	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub repositories to mirror.")
-	flag.StringVar(&cfg.GitHubToken, "github-token", "", "GitHub token for mirroring and syncing.")
-	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea repositories to mirror.")
-	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Gitea token for mirroring and syncing.")
-	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL for the source Gitea instance.")
-	skip := flag.String("skip", "", `List of source repositories to skip seperated by " " (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
-	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip source repositories that are forks.")
-	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip source repositories that are private.")
-	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki.")
-	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Synchronize everything.")
-	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Synchronize repository topics.")
-	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Synchronize repository description.")
-	flag.BoolVar(&cfg.SyncVisibility, "sync-visibility", false, "Synchronize repository visibility.")
+	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub source repositories.")
+	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for accessing GitHub.")
+	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
+	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for accessing the source Gitea instance.")
+	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL of the source Gitea instance.")
+	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
+	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
+	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
+	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki from source repositories.")
+	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Sync everything.")
+	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Sync topics of repository.")
+	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Sync description of repository.")
+	flag.BoolVar(&cfg.SyncVisibility, "sync-visibility", false, "Sync private/public status of repository.")
 	flag.BoolVar(&cfg.SyncMirrorInterval, "sync-mirror-interval", false, "Disable periodic sync if source repository is archived.")
-	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance.")
-	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for the destination Gitea instance.")
-	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrors on the destination Gitea instance.")
+	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance. (required)")
+	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for accessing the destination Gitea instance. (required)")
+	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrored repositories on the destination Gitea instance.")
 	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the destination Gitea instance.")
 
 	flag.Parse()
 
-	cfg.Skip = strings.Split(*skip, " ")
+	cfg.SkipRepos = strings.Split(*skipRepos, " ")
 
 	return &cfg
 }

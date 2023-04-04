@@ -51,8 +51,8 @@ func main() {
 
 Loop:
 	for _, repo := range repos {
-		for _, skip := range cfg.Skip {
-			if repo.Is(skip) {
+		for _, skipRepo := range cfg.SkipRepos {
+			if repo.Is(skipRepo) {
 				fmt.Println("Skipping", repo.GetFullName())
 				continue Loop
 			}
