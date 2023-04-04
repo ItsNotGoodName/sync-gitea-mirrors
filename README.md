@@ -8,6 +8,7 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | ---------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `DAEMON`               | 0        |                   | Seconds between each run where 0 means running only once (e.g. `86400` is a day).                                   |
 | `DAEMON_SKIP_FIRST`    | false    |                   | Skip first daemon run.                                                                                              |
+| `DAEMON_EXIT_ERROR`    | false    |                   | Exit daemon when error occurs.                                                                                      |
 | `GITHUB_OWNER`         | ""       | maybe<sub>1</sub> | Owner of GitHub source repositories.                                                                                |
 | `GITHUB_TOKEN`         | ""       | maybe<sub>1</sub> | Token for accessing GitHub.                                                                                         |
 | `GITEA_OWNER`          | ""       | maybe<sub>2</sub> | Owner of Gitea source repositories.                                                                                 |
@@ -72,8 +73,8 @@ docker run -d \
   -e GITHUB_TOKEN="ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
   -e DEST_URL="https://git.example.com" \
   -e DEST_TOKEN="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" \
-  -e SYNC_ALL \
-  -e MIGRATE_ALL \
+  -e SYNC_ALL=true \
+  -e MIGRATE_ALL=true \
   -e DAEMON=86400 \
   ghcr.io/itsnotgoodname/sync-gitea-mirrors:latest
 ```

@@ -4,12 +4,16 @@ import (
 	"code.gitea.io/sdk/gitea"
 )
 
-func ConvertList(teaRepos []*gitea.Repository, getTopic func(r *gitea.Repository) []string) []SourceRepository {
+func ConvertList(teaRepos []*gitea.Repository, getTopic func(r *gitea.Repository) ([]string, error)) ([]SourceRepository, error) {
 	repos := make([]SourceRepository, len(teaRepos))
 	for i := range repos {
-		repos[i] = Convert(teaRepos[i], getTopic(teaRepos[i]))
+		topics, err := getTopic(teaRepos[i])
+		if err != nil {
+			return nil, err
+		}
+		repos[i] = Convert(teaRepos[i], topics)
 	}
-	return repos
+	return repos, nil
 }
 
 func Convert(r *gitea.Repository, topics []string) SourceRepository {

@@ -39,31 +39,47 @@ func main() {
 		DestMirrorInterval: cfg.DestMirrorInterval,
 	}
 
+	fmt.Printf("SyncConfig: %+v\n", syncConfig)
+
 	if cfg.Daemon != 0 {
 		// Daemon
-		if !cfg.DaemonSkipFirst {
-			run(cfg, &syncConfig)
-		}
 		interval := time.Duration(cfg.Daemon) * time.Second
-		for {
+		if cfg.DaemonSkipFirst {
 			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
 			time.Sleep(interval)
-			run(cfg, &syncConfig)
+		}
+
+		for {
+			if err := run(cfg, &syncConfig); err != nil {
+				if cfg.DaemonExitError {
+					log.Fatal("main", zap.Error(err))
+				}
+				log.Error("main", zap.Error(err))
+			}
+
+			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
+			time.Sleep(interval)
 		}
 	} else {
-		run(cfg, &syncConfig)
+		// Normal
+		if err := run(cfg, &syncConfig); err != nil {
+			log.Fatal("main", zap.Error(err))
+		}
 	}
 }
 
-func run(cfg *config.Config, syncConfig *tea.SyncConfig) {
+func run(cfg *config.Config, syncConfig *tea.SyncConfig) error {
 	// Create client
 	client, err := gitea.NewClient(cfg.DestURL, gitea.SetToken(cfg.DestToken))
 	if err != nil {
-		log.Fatal("could not create destination Gitea client", zap.Error(err))
+		return fmt.Errorf("could not create destination Gitea client: %w", err)
 	}
 
 	// Get repositories based config
-	repos, migrateRepoOption := getSourceRepos(cfg)
+	repos, migrateRepoOption, err := getSourceRepos(cfg)
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("Will sync %d repositories\n", len(repos))
 
@@ -115,6 +131,7 @@ Loop:
 		output, err := tea.Sync(client, teaRepo, &repo.SyncRepository, syncConfig)
 		if err != nil {
 			log.Error("could not sync repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+			continue
 		}
 
 		if output.SyncMirror {
@@ -133,9 +150,11 @@ Loop:
 			fmt.Println("~ Updated visibility")
 		}
 	}
+
+	return nil
 }
 
-func getSourceRepos(cfg *config.Config) ([]tea.SourceRepository, gitea.MigrateRepoOption) {
+func getSourceRepos(cfg *config.Config) ([]tea.SourceRepository, gitea.MigrateRepoOption, error) {
 	switch cfg.Source {
 	case config.SourceGitHub:
 		// Create GitHub client
@@ -145,45 +164,51 @@ func getSourceRepos(cfg *config.Config) ([]tea.SourceRepository, gitea.MigrateRe
 		// List repositories
 		repos, err := hub.ListRepos(ctx, hubClient, cfg.GitHubOwner, cfg.SkipPrivate, cfg.SkipForks)
 		if err != nil {
-			log.Fatal("could not get GitHub repos", zap.String("owner", cfg.GitHubOwner), zap.Error(err))
+			return nil, gitea.MigrateRepoOption{}, fmt.Errorf("could not get GitHub repos: %s: %w", cfg.GitHubOwner, err)
 		}
 
 		return hub.ConvertList(repos), gitea.MigrateRepoOption{
 			Service:   gitea.GitServiceGithub,
 			AuthToken: cfg.GitHubToken,
-		}
+		}, nil
 	case config.SourceGitea:
 		// Create Gitea client
 		srcClient, err := gitea.NewClient(cfg.GiteaURL, gitea.SetToken(cfg.GiteaToken))
 		if err != nil {
-			log.Fatal("could not create source Gitea client", zap.String("url", cfg.GiteaURL), zap.Error(err))
+			return nil, gitea.MigrateRepoOption{}, fmt.Errorf("could not create source Gitea client: %s: %w", cfg.GiteaURL, err)
 		}
 
 		// List repositories
 		repos, err := tea.ListRepos(srcClient, cfg.GiteaOwner, cfg.SkipPrivate, cfg.SkipForks)
 		if err != nil {
-			log.Fatal("could not set source Gitea repos", zap.String("owner", cfg.GitHubOwner), zap.Error(err))
+			return nil, gitea.MigrateRepoOption{}, fmt.Errorf("could not set source Gitea repos: %s: %w", cfg.GiteaOwner, err)
 		}
 
-		var getTopics func(r *gitea.Repository) []string
+		var getTopics func(r *gitea.Repository) ([]string, error)
 		if cfg.SyncTopics {
-			getTopics = func(r *gitea.Repository) []string {
+			getTopics = func(r *gitea.Repository) ([]string, error) {
 				topics, _, err := srcClient.ListRepoTopics(r.Owner.UserName, r.Name, gitea.ListRepoTopicsOptions{})
 				if err != nil {
-					log.Fatal("could not list topics", zap.String("repo", r.FullName), zap.Error(err))
+					return nil, fmt.Errorf("could not list topics: %s: %w", r.FullName, err)
 				}
-				return topics
+
+				return topics, nil
 			}
 		} else {
-			getTopics = func(r *gitea.Repository) []string {
-				return []string{}
+			getTopics = func(r *gitea.Repository) ([]string, error) {
+				return []string{}, nil
 			}
 		}
 
-		return tea.ConvertList(repos, getTopics), gitea.MigrateRepoOption{
+		convRepos, err := tea.ConvertList(repos, getTopics)
+		if err != nil {
+			return nil, gitea.MigrateRepoOption{}, err
+		}
+
+		return convRepos, gitea.MigrateRepoOption{
 			Service:   gitea.GitServiceGitea,
 			AuthToken: cfg.GiteaToken,
-		}
+		}, nil
 	default:
 		panic(fmt.Sprintf("invalid SOURCE: %s", cfg.Source))
 	}

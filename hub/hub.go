@@ -2,7 +2,6 @@ package hub
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ItsNotGoodName/sync-gitea-mirrors/tea"
 	"github.com/google/go-github/v50/github"
@@ -49,7 +48,7 @@ func ListRepos(ctx context.Context, client *github.Client, owner string, skipPri
 				ListOptions: github.ListOptions{Page: page, PerPage: limit},
 			})
 		if err != nil {
-			return nil, fmt.Errorf("could not list GitHub repos: %w", err)
+			return nil, err
 		}
 		repos = append(repos, pagedRepos...)
 		page = resp.NextPage
