@@ -3,9 +3,55 @@ package tea
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"code.gitea.io/sdk/gitea"
 )
+
+const ArchivedMirrorInterval = "0s"
+
+type SyncRepository struct {
+	Topics      []string
+	Description string
+	Private     bool
+	Archived    bool
+	PushedAt    time.Time
+}
+
+func (sr SyncRepository) StaleMirror(teaRepo *gitea.Repository) bool {
+	return sr.PushedAt.After(teaRepo.MirrorUpdated)
+}
+
+func (sr SyncRepository) DiffDescription(teaRepo *gitea.Repository) bool {
+	return teaRepo.Description != sr.Description
+}
+
+func (sr SyncRepository) DiffVisibility(teaRepo *gitea.Repository) bool {
+	return teaRepo.Private != sr.Private
+}
+
+func (sr SyncRepository) DiffMirrorInterval(teaRepo *gitea.Repository) bool {
+	if sr.Archived {
+		return teaRepo.MirrorInterval != ArchivedMirrorInterval
+	}
+
+	return teaRepo.MirrorInterval == ArchivedMirrorInterval
+}
+
+func (sr SyncRepository) DiffTopics(teaTopics []string) bool {
+Loop:
+	for _, hubTopic := range sr.Topics {
+		for _, teaTopic := range teaTopics {
+			if teaTopic == hubTopic {
+				continue Loop
+			}
+		}
+
+		return true
+	}
+
+	return false
+}
 
 type SyncConfig struct {
 	SyncDescription    bool
@@ -23,7 +69,7 @@ type SyncOutput struct {
 	SyncMirror           bool
 }
 
-func Sync(client *gitea.Client, teaRepo *gitea.Repository, sourceRepo *SourceRepository, config SyncConfig) (SyncOutput, error) {
+func Sync(client *gitea.Client, teaRepo *gitea.Repository, sourceRepo *SyncRepository, config SyncConfig) (SyncOutput, error) {
 	owner := teaRepo.Owner.UserName
 	repoName := teaRepo.Name
 

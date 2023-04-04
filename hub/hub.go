@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"code.gitea.io/sdk/gitea"
+	"github.com/ItsNotGoodName/sync-gitea-mirrors/tea"
 	"github.com/google/go-github/v50/github"
 	"golang.org/x/oauth2"
 )
 
-func GetRepos(ctx context.Context, client *github.Client, owner string, skipPrivate bool) ([]*github.Repository, error) {
+func ListRepos(ctx context.Context, client *github.Client, owner string, skipPrivate bool, skipForks bool) ([]*github.Repository, error) {
 	visiblity := "all"
 	if skipPrivate {
 		visiblity = "public"
@@ -31,6 +31,16 @@ func GetRepos(ctx context.Context, client *github.Client, owner string, skipPriv
 		page = resp.NextPage
 	}
 
+	if skipForks {
+		var notForkRepos []*github.Repository
+		for _, r := range repos {
+			if !r.GetFork() {
+				notForkRepos = append(notForkRepos, r)
+			}
+		}
+		repos = notForkRepos
+	}
+
 	return repos, nil
 }
 
@@ -47,10 +57,34 @@ func NewClient(ctx context.Context, token string) *github.Client {
 	return github.NewClient(tc)
 }
 
-func Migrate(client *gitea.Client, opt gitea.MigrateRepoOption, hubRepo *github.Repository, token string) (*gitea.Repository, error) {
-	opt.Service = gitea.GitServiceGithub
-	opt.CloneAddr = hubRepo.GetCloneURL()
-	opt.AuthToken = token
-	repo, _, err := client.MigrateRepo(opt)
-	return repo, err
+func ConvertList(hubRepos []*github.Repository) []tea.SourceRepository {
+	repos := make([]tea.SourceRepository, len(hubRepos))
+	for i := range repos {
+		repos[i] = Convert(hubRepos[i])
+	}
+	return repos
 }
+
+func Convert(r *github.Repository) tea.SourceRepository {
+	return tea.SourceRepository{
+		SyncRepository: tea.SyncRepository{
+			Topics:      r.Topics,
+			Description: r.GetDescription(),
+			Private:     r.GetPrivate(),
+			Archived:    r.GetArchived(),
+			PushedAt:    r.GetPushedAt().Time,
+		},
+		Owner:    r.GetOwner().GetLogin(),
+		Name:     r.GetName(),
+		Fork:     r.GetFork(),
+		CloneURL: r.GetCloneURL(),
+	}
+}
+
+// func Migrate(client *gitea.Client, opt gitea.MigrateRepoOption, hubRepo *github.Repository, token string) (*gitea.Repository, error) {
+// 	opt.Service = gitea.GitServiceGithub
+// 	opt.CloneAddr = hubRepo.GetCloneURL()
+// 	opt.AuthToken = token
+// 	repo, _, err := client.MigrateRepo(opt)
+// 	return repo, err
+// }

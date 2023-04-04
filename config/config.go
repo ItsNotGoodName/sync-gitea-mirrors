@@ -7,21 +7,26 @@ import (
 	"github.com/caarlos0/env/v7"
 )
 
-// type Source string
+type Source string
 
-// const (
-// 	SourceGithub Source = "github"
-// )
+const (
+	SourceGitHub Source = "github"
+	SourceGitea  Source = "gitea"
+)
 
 type Config struct {
-	// SrcType        Source   `env:"SRC_TYPE" envDefault:"github"`
 	// SrcURL         string   `env:"SRC_URL"`
-	SrcToken string `env:"SRC_TOKEN"`
-	SrcOwner string `env:"SRC_OWNER"`
 	// SrcRepos       []string `env:"SRC_REPOS" envSeparator:" "`
 	// SrcSkip        []string `env:"SRC_SKIP" envSeparator:" "`
-	SrcSkipForks   bool `env:"SRC_SKIP_FORKS"`
-	SrcSkipPrivate bool `env:"SRC_SKIP_PRIVATE"`
+
+	Source      Source `env:"SRC"`
+	GitHubOwner string `env:"GITHUB_OWNER"`
+	GitHubToken string `env:"GITHUB_TOKEN"`
+	GiteaOwner  string `env:"GITEA_OWNER"`
+	GiteaToken  string `env:"GITEA_TOKEN"`
+	GiteaURL    string `env:"GITEA_URL"`
+	SkipForks   bool   `env:"SKIP_FORKS"`
+	SkipPrivate bool   `env:"SKIP_PRIVATE"`
 
 	SyncAll            bool `env:"SYNC_ALL"`
 	SyncTopics         bool `env:"SYNC_TOPICS"`
@@ -32,33 +37,35 @@ type Config struct {
 	DestURL            string `env:"DEST_URL"`
 	DestToken          string `env:"DEST_TOKEN"`
 	DestOwner          string `env:"DEST_OWNER"`
-	DestMirrorInterval string `env:"DEST_MIRROR_INTERVAL" envDefault:"8h0m0s"`
+	DestMirrorInterval string `env:"DEST_MIRROR_INTERVAL"`
 }
 
 const DefaultMirrorInterval = "8h0m0s"
 
 func New() *Config {
-	return &Config{}
-}
+	cfg := Config{}
 
-func (cfg *Config) WithFlags() *Config {
-	flag.StringVar(&cfg.SrcToken, "src-token", "", "Token for source service.")
-	flag.StringVar(&cfg.SrcOwner, "src-owner", "", "Owner of source repositories to mirror.")
-	flag.BoolVar(&cfg.SrcSkipForks, "src-skip-forks", false, "Skip source repositories that are forks.")
-	flag.BoolVar(&cfg.SrcSkipPrivate, "src-skip-private", false, "Skip source repositories that are private.")
+	flag.StringVar((*string)(&cfg.Source), "src", string(SourceGitHub), "Source service.")
+	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub repositories to mirror.")
+	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for GitHub for mirroring and syncing.")
+	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea repositories to mirror.")
+	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for Gitea for mirroring and syncing.")
+	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL for the source Gitea instance.")
+	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip source repositories that are forks.")
+	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip source repositories that are private.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Synchronize everything.")
-	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Synchronize topics.")
-	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Synchronize description.")
-	flag.BoolVar(&cfg.SyncVisibility, "sync-visibility", false, "Synchronize visibility status.")
+	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Synchronize repository topics.")
+	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Synchronize repository description.")
+	flag.BoolVar(&cfg.SyncVisibility, "sync-visibility", false, "Synchronize repository visibility.")
 	flag.BoolVar(&cfg.SyncMirrorInterval, "sync-mirror-interval", false, "Disable periodic sync if source repository is archived.")
-	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance. (required)")
-	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for the destination Gitea instance. (required)")
+	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance.")
+	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for the destination Gitea instance.")
 	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrors on the Gitea instance.")
 	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultMirrorInterval, "Default mirror interval for new migrations on the Gitea instance.")
 
 	flag.Parse()
 
-	return cfg
+	return &cfg
 }
 
 func (cfg *Config) ParseAndValidate() error {
@@ -73,8 +80,20 @@ func (cfg *Config) ParseAndValidate() error {
 		cfg.SyncVisibility = true
 	}
 
-	if cfg.SrcOwner == "" && cfg.SrcToken == "" {
-		return fmt.Errorf("SRC_OWNER or SRC_TOKEN not set")
+	switch cfg.Source {
+	case SourceGitHub:
+		if cfg.GitHubOwner == "" && cfg.GitHubToken == "" {
+			return fmt.Errorf("GITHUB_OWNER or GITHUB_TOKEN not set")
+		}
+	case SourceGitea:
+		if cfg.GiteaOwner == "" && cfg.GiteaToken == "" {
+			return fmt.Errorf("GITEA_OWNER or GITEA_TOKEN not set")
+		}
+		if cfg.GiteaURL == "" {
+			return fmt.Errorf("GITEA_URL not set")
+		}
+	default:
+		return fmt.Errorf("invalid SRC: %s", cfg.Source)
 	}
 
 	if cfg.DestURL == "" {
