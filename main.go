@@ -26,8 +26,8 @@ func main() {
 	}
 
 	if cfg.Source == config.SourceGitHub {
-		if cfg.GitHubOwner != "" && cfg.GitHubToken != "" {
-			log.Warn("setting both GITHUB_OWNER and GITHUB_TOKEN will only display public repos")
+		if cfg.GitHubOwner != "" {
+			log.Warn("Setting GITHUB_OWNER will only show public repositories")
 		}
 	}
 

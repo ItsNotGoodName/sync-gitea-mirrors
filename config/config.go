@@ -108,8 +108,8 @@ func (cfg *Config) ParseAndValidate() error {
 	// Validate source config
 	switch cfg.Source {
 	case SourceGitHub:
-		if cfg.GitHubOwner == "" && cfg.GitHubToken == "" {
-			return fmt.Errorf("GITHUB_OWNER or GITHUB_TOKEN not set")
+		if cfg.GitHubToken == "" {
+			return fmt.Errorf("GITHUB_TOKEN not set")
 		}
 	case SourceGitea:
 		if cfg.GiteaOwner == "" && cfg.GiteaToken == "" {
