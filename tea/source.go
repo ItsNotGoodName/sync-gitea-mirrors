@@ -1,7 +1,6 @@
 package tea
 
 import (
-	"fmt"
 	"strings"
 
 	"code.gitea.io/sdk/gitea"
@@ -42,8 +41,5 @@ func (sr SourceRepository) IsMyMirror(teaRepo *gitea.Repository) bool {
 		}
 	}
 
-	panic(fmt.Sprint(teaRepo.OriginalURL, sr.URLS))
-
 	return false
-
 }

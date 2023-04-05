@@ -50,12 +50,12 @@ type Config struct {
 func New() *Config {
 	cfg := Config{}
 
-	flag.IntVar(&cfg.Daemon, "daemon", 0, "Seconds between each run where 0 means running only once (e.g. `86400` is a day).")
+	flag.IntVar(&cfg.Daemon, "daemon", 0, `Seconds between each run where 0 means running only once (e.g. "86400" is a day).`)
 	flag.BoolVar(&cfg.DaemonSkipFirst, "daemon-skip-first", false, "Skip first run.")
 	flag.BoolVar(&cfg.DaemonExitError, "daemon-exit-error", false, "Exit daemon when error occurs.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub source repositories.")
 	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for accessing GitHub.")
-	flag.StringVar(&cfg.GitHubOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
+	flag.StringVar(&cfg.GiteaOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
 	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for accessing the source Gitea instance.")
 	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL of the source Gitea instance.")
 	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
