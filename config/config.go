@@ -112,8 +112,8 @@ func (cfg *Config) ParseAndValidate() error {
 			return fmt.Errorf("GITHUB_TOKEN not set")
 		}
 	case SourceGitea:
-		if cfg.GiteaOwner == "" && cfg.GiteaToken == "" {
-			return fmt.Errorf("GITEA_OWNER or GITEA_TOKEN not set")
+		if cfg.GiteaToken == "" {
+			return fmt.Errorf("GITEA_TOKEN not set")
 		}
 		if cfg.GiteaURL == "" {
 			return fmt.Errorf("GITEA_URL not set")
