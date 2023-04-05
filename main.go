@@ -27,7 +27,7 @@ func main() {
 
 	if cfg.Source == config.SourceGitHub {
 		if cfg.GitHubOwner != "" {
-			log.Warn("Setting GITHUB_OWNER will only show public repositories")
+			log.Warn("setting GITHUB_OWNER will only show public repositories")
 		}
 	}
 
@@ -44,6 +44,7 @@ func main() {
 	if cfg.Daemon != 0 {
 		// Daemon
 		interval := time.Duration(cfg.Daemon) * time.Second
+
 		if cfg.DaemonSkipFirst {
 			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
 			time.Sleep(interval)
@@ -117,6 +118,7 @@ Loop:
 			opts.CloneAddr = repo.URLS[0]
 			opts.Private = repo.Private
 			opts.Wiki = cfg.MigrateWiki
+			opts.LFS = cfg.MigrateLFS
 
 			if teaRepo, _, err = client.MigrateRepo(opts); err != nil {
 				log.Error("could not migrate repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))

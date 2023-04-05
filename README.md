@@ -17,8 +17,9 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | `SKIP_REPOS`               | ""       |          | List of space seperated repositories to not sync (e.g. `ItsNotGoodName/example1 itsnotgoodname/example2 example3`). |
 | `SKIP_FORKS`               | false    |          | Skip fork repositories.                                                                                             |
 | `SKIP_PRIVATE`             | false    |          | Skip private repositories.                                                                                          |
-| `MIGRATE_ALL`              | false    |          | Migrate everything.                                                                                                 |
+| `MIGRATE_ALL`              | false    |          | Migrate every item.                                                                                                 |
 | `MIGRATE_WIKI`             | false    |          | Migrate wiki from source repositories.                                                                              |
+| `MIGRATE_LFS`              | false    |          | Migrate lfs from source repositories.                                                                               |
 | `SYNC_ALL`                 | false    |          | Sync everything.                                                                                                    |
 | `SYNC_TOPICS`              | false    |          | Sync topics of repository.                                                                                          |
 | `SYNC_DESCRIPTION`         | false    |          | Sync description of repository.                                                                                     |
@@ -26,15 +27,15 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | `SYNC_MIRROR_INTERVAL`     | false    |          | Disable periodic sync if source repository is archived.                                                             |
 | `DEST_URL`                 | ""       | true     | URL of the destination Gitea instance.                                                                              |
 | `DEST_TOKEN`               | ""       | true     | Token for accessing the destination Gitea instance.                                                                 |
-| `DEST_OWNER`               | ""       |          | Owner of the mirrored repositories on the destination Gitea instance.                                               |
-| `DEST_MIRROR_INTERVAL`     | "8h0m0s" |          | Default mirror interval for new migrations on the destination Gitea instance.                                       |
+| `DEST_OWNER`               | ""       |          | Owner of the mirrored repositories in the destination Gitea instance.                                               |
+| `DEST_MIRROR_INTERVAL`     | "8h0m0s" |          | Default mirror interval for new migrations in the destination Gitea instance.                                       |
 
 1. Setting `GITHUB_OWNER` will only show public repositories.
 
 # Example
 
 Sync repositories from GitHub to a Gitea instance that is located at `https://gitea.example.com` on a daily interval.
-If a repository does not exist in Gitea then it will create a migration that includes wiki data.
+If a repository does not exist in Gitea then it will create a migration that includes wiki and lfs.
 It will sync description, topics, and visiblity.
 If the GitHub repository is archved then it will set the `mirror-interval` to `0s` in the Gitea repository.
 

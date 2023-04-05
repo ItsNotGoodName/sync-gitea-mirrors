@@ -34,6 +34,7 @@ type Config struct {
 
 	MigrateAll  bool `env:"MIGRATE_ALL"`
 	MigrateWiki bool `env:"MIGRATE_WIKI"`
+	MigrateLFS  bool `env:"MIGRATE_LFS"`
 
 	SyncAll            bool `env:"SYNC_ALL"`
 	SyncTopics         bool `env:"SYNC_TOPICS"`
@@ -61,8 +62,9 @@ func New() *Config {
 	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
-	flag.BoolVar(&cfg.MigrateAll, "migrate-all", false, "Migrate everything.")
+	flag.BoolVar(&cfg.MigrateAll, "migrate-all", false, "Migrate every item.")
 	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki from source repositories.")
+	flag.BoolVar(&cfg.MigrateLFS, "migrate-lfs", false, "Migrate lfs from source repositories.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Sync everything.")
 	flag.BoolVar(&cfg.SyncTopics, "sync-topics", false, "Sync topics of repository.")
 	flag.BoolVar(&cfg.SyncDescription, "sync-description", false, "Sync description of repository.")
@@ -70,8 +72,8 @@ func New() *Config {
 	flag.BoolVar(&cfg.SyncMirrorInterval, "sync-mirror-interval", false, "Disable periodic sync if source repository is archived.")
 	flag.StringVar(&cfg.DestURL, "dest-url", "", "URL of the destination Gitea instance. (required)")
 	flag.StringVar(&cfg.DestToken, "dest-token", "", "Token for accessing the destination Gitea instance. (required)")
-	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrored repositories on the destination Gitea instance.")
-	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultDestMirrorInterval, "Default mirror interval for new migrations on the destination Gitea instance.")
+	flag.StringVar(&cfg.DestOwner, "dest-owner", "", "Owner of the mirrored repositories in the destination Gitea instance.")
+	flag.StringVar(&cfg.DestMirrorInterval, "dest-mirror-interval", DefaultDestMirrorInterval, "Default mirror interval for new migrations in the destination Gitea instance.")
 
 	flag.Parse()
 
@@ -87,6 +89,7 @@ func (cfg *Config) ParseAndValidate() error {
 
 	if cfg.MigrateAll {
 		cfg.MigrateWiki = true
+		cfg.MigrateLFS = true
 	}
 
 	if cfg.SyncAll {
@@ -102,7 +105,7 @@ func (cfg *Config) ParseAndValidate() error {
 	} else if cfg.GiteaOwner != "" || cfg.GiteaToken != "" || cfg.GiteaURL != "" {
 		cfg.Source = SourceGitea
 	} else {
-		return fmt.Errorf("setup GitHub or Gitea as a repository source")
+		return fmt.Errorf("source for repositories not setup")
 	}
 
 	// Validate source config
@@ -131,7 +134,7 @@ func (cfg *Config) ParseAndValidate() error {
 	}
 
 	if cfg.Daemon < 60 && cfg.Daemon != 0 {
-		return fmt.Errorf("DAEMON interval too quick: %d", cfg.Daemon)
+		return fmt.Errorf("DAEMON interval too small: %d", cfg.Daemon)
 	}
 
 	return nil
