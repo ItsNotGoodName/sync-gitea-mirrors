@@ -13,10 +13,11 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | `GITHUB_TOKEN`         | ""       | maybe<sub>1</sub> | Token for accessing GitHub.                                                                                         |
 | `GITEA_OWNER`          | ""       | maybe<sub>2</sub> | Owner of Gitea source repositories.                                                                                 |
 | `GITEA_TOKEN`          | ""       | maybe<sub>2</sub> | Token for accessing the source Gitea instance.                                                                      |
-| `GITEA_URL`            | ""       | maybe             | URL of the source Gitea instance.                                                                                   |
+| `GITEA_URL`            | ""       | maybe             | URL of the source Gitea instance (e.g. `https://gitea.example.com`).                                                |
 | `SKIP_REPOS`           | ""       |                   | List of space seperated repositories to not sync (e.g. `ItsNotGoodName/example1 itsnotgoodname/example2 example3`). |
 | `SKIP_FORKS`           | false    |                   | Skip fork repositories.                                                                                             |
 | `SKIP_PRIVATE`         | false    |                   | Skip private repositories.                                                                                          |
+| `MIGRATE_ALL`          | false    |                   | Migrate everything.                                                                                                 |
 | `MIGRATE_WIKI`         | false    |                   | Migrate wiki from source repositories.                                                                              |
 | `SYNC_ALL`             | false    |                   | Sync everything.                                                                                                    |
 | `SYNC_TOPICS`          | false    |                   | Sync topics of repository.                                                                                          |
@@ -30,14 +31,17 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 
 # Example
 
-Sync repositories from GitHub to Gitea located at `https://git.example.com` on an interval.
+Sync repositories from GitHub to Gitea that is located at `https://gitea.example.com` on a daily interval.
+If a repository does not exist on Gitea then it will create a migration that includes wiki data.
+It will sync the description, topics, and visiblity.
+If the GitHub repository is archved then it will set the `mirror-interval` to `0s` on the Gitea repository.
 
 ## cli
 
 ```
 sync-gitea-mirrors \
   -github-token="ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
-  -dest-url="https://git.example.com" \
+  -dest-url="https://gitea.example.com" \
   -dest-token="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" \
   -sync-all \
   -migrate-all \
@@ -54,7 +58,7 @@ services:
     image: ghcr.io/itsnotgoodname/sync-gitea-mirrors:latest
     environment:
       GITHUB_TOKEN: ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-      DEST_URL: https://git.example.com
+      DEST_URL: https://gitea.example.com
       DEST_TOKEN: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
       SYNC_ALL: true
       MIGRATE_ALL: true
@@ -71,10 +75,15 @@ docker run -d \
   --user 1000:1000 \
   --restart unless-stopped \
   -e GITHUB_TOKEN="ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
-  -e DEST_URL="https://git.example.com" \
+  -e DEST_URL="https://gitea.example.com" \
   -e DEST_TOKEN="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" \
   -e SYNC_ALL=true \
   -e MIGRATE_ALL=true \
   -e DAEMON=86400 \
   ghcr.io/itsnotgoodname/sync-gitea-mirrors:latest
 ```
+
+# To Do
+
+- Update credentials of Gitea mirrors
+- Add GitLab as a source
