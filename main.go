@@ -114,6 +114,7 @@ Loop:
 			opts.Mirror = true
 			opts.RepoOwner = owner
 			opts.RepoName = name
+			opts.CloneAddr = repo.URLS[0]
 			opts.Private = repo.Private
 			opts.Wiki = cfg.MigrateWiki
 

@@ -6,7 +6,7 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 
 | Environment Variable   | Default  | Required          | Description                                                                                                         |
 | ---------------------- | -------- | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `DAEMON`               | 0        |                   | Seconds between each run where 0 means running only once (e.g. `86400` is a day).                                   |
+| `DAEMON`               | 0        |                   | Seconds between each run where 0 means disabling daemon (e.g. `86400` is a day).                                    |
 | `DAEMON_SKIP_FIRST`    | false    |                   | Skip first daemon run.                                                                                              |
 | `DAEMON_EXIT_ERROR`    | false    |                   | Exit daemon when error occurs.                                                                                      |
 | `GITHUB_OWNER`         | ""       | maybe<sub>1</sub> | Owner of GitHub source repositories.                                                                                |
@@ -29,12 +29,15 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | `DEST_OWNER`           | ""       |                   | Owner of the mirrored repositories on the destination Gitea instance.                                               |
 | `DEST_MIRROR_INTERVAL` | "8h0m0s" |                   | Default mirror interval for new migrations on the destination Gitea instance.                                       |
 
+1. Either `GITHUB_OWNER` or `GITHUB_TOKEN` can be set. Setting both will only show public repositories.
+2. Either `GITEA_OWNER` or `GITEA_TOKEN` can be set.
+
 # Example
 
-Sync repositories from GitHub to Gitea that is located at `https://gitea.example.com` on a daily interval.
-If a repository does not exist on Gitea then it will create a migration that includes wiki data.
-It will sync the description, topics, and visiblity.
-If the GitHub repository is archved then it will set the `mirror-interval` to `0s` on the Gitea repository.
+Sync repositories from GitHub to a Gitea instance that is located at `https://gitea.example.com` on a daily interval.
+If a repository does not exist in Gitea then it will create a migration that includes wiki data.
+It will sync description, topics, and visiblity.
+If the GitHub repository is archved then it will set the `mirror-interval` to `0s` in the Gitea repository.
 
 ## cli
 
