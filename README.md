@@ -63,11 +63,11 @@ services:
     container_name: sync-gitea-mirrors
     image: ghcr.io/itsnotgoodname/sync-gitea-mirrors:latest
     environment:
-      GITHUB_TOKEN: ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-      DEST_URL: https://gitea.example.com
-      DEST_TOKEN: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
-      SYNC_ALL: true
-      DAEMON: 86400
+      - GITHUB_TOKEN=ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+      - DEST_URL=https://gitea.example.com
+      - DEST_TOKEN=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+      - SYNC_ALL=true
+      - DAEMON=86400
     user: 1000:1000
     restart: unless-stopped
 ```
