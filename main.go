@@ -14,13 +14,32 @@ import (
 )
 
 var log *zap.Logger
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 func main() {
 	log, _ = zap.NewProduction()
 	defer log.Sync()
 
-	// Parse config
+	// Read flags
 	cfg := config.New()
+
+	// Show version and exit
+	if cfg.ShowVersion {
+		fmt.Println(version)
+		return
+	}
+
+	// Show info and exit
+	if cfg.ShowInfo {
+		fmt.Printf("Version: %s\nCommit: %s\nDate: %s\n", version, commit, date)
+		return
+	}
+
+	// Parse config
 	if err := cfg.ParseAndValidate(); err != nil {
 		log.Fatal("could not parse config", zap.Error(err))
 	}

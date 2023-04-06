@@ -18,6 +18,9 @@ const (
 )
 
 type Config struct {
+	ShowVersion bool
+	ShowInfo    bool
+
 	Daemon          int  `env:"DAEMON"`
 	DaemonSkipFirst bool `env:"DAEMON_SKIP_FIRST"`
 	DaemonExitError bool `env:"DAEMON_EXIT_ERROR"`
@@ -51,6 +54,8 @@ type Config struct {
 func New() *Config {
 	cfg := Config{}
 
+	flag.BoolVar(&cfg.ShowVersion, "version", false, "Show version.")
+	flag.BoolVar(&cfg.ShowInfo, "info", false, "Show build information.")
 	flag.IntVar(&cfg.Daemon, "daemon", 0, `Seconds between each run where 0 means running only once (e.g. "86400" is a day).`)
 	flag.BoolVar(&cfg.DaemonSkipFirst, "daemon-skip-first", false, "Skip first run.")
 	flag.BoolVar(&cfg.DaemonExitError, "daemon-exit-error", false, "Exit daemon when error occurs.")
