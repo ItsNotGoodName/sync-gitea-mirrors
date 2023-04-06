@@ -68,7 +68,7 @@ func New() *Config {
 	flag.StringVar(&cfg.GiteaOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
 	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for accessing the source Gitea instance.")
 	flag.StringVar(&cfg.GiteaURL, "gitea-url", GiteaURL, "URL of the source Gitea instance.")
-	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
+	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "repo1 repo2 repo3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
 	flag.BoolVar(&cfg.MigrateAll, "migrate-all", false, "Migrate every item.")
