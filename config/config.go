@@ -9,6 +9,7 @@ import (
 )
 
 const DefaultDestMirrorInterval = "8h0m0s"
+const MinimumDaemon = 60
 
 type Source string
 
@@ -22,6 +23,7 @@ type Config struct {
 	ShowInfo    bool
 
 	Daemon          int  `env:"DAEMON"`
+	DaemonError     int  `env:"DAEMON_ERROR"`
 	DaemonSkipFirst bool `env:"DAEMON_SKIP_FIRST"`
 	DaemonExitError bool `env:"DAEMON_EXIT_ERROR"`
 
@@ -57,6 +59,7 @@ func New() *Config {
 	flag.BoolVar(&cfg.ShowVersion, "version", false, "Show version.")
 	flag.BoolVar(&cfg.ShowInfo, "info", false, "Show build information.")
 	flag.IntVar(&cfg.Daemon, "daemon", 0, `Seconds between each run where 0 means running only once (e.g. "86400" is a day).`)
+	flag.IntVar(&cfg.DaemonError, "daemon-error", 300, `Seconds between each run when error occurs (e.g. "300" is a 5 minutes).`)
 	flag.BoolVar(&cfg.DaemonSkipFirst, "daemon-skip-first", false, "Skip first run.")
 	flag.BoolVar(&cfg.DaemonExitError, "daemon-exit-error", false, "Exit daemon when error occurs.")
 	flag.StringVar(&cfg.GitHubOwner, "github-owner", "", "Owner of GitHub source repositories.")
@@ -90,6 +93,11 @@ func New() *Config {
 func (cfg *Config) ParseAndValidate() error {
 	if err := env.Parse(cfg); err != nil {
 		return err
+	}
+
+	// keep daemon error less than or equal to daemon
+	if cfg.DaemonError > cfg.Daemon {
+		cfg.DaemonError = cfg.Daemon
 	}
 
 	if cfg.MigrateAll {
@@ -138,8 +146,12 @@ func (cfg *Config) ParseAndValidate() error {
 		return fmt.Errorf("DEST_TOKEN not set")
 	}
 
-	if cfg.Daemon < 60 && cfg.Daemon != 0 {
+	if cfg.Daemon < MinimumDaemon && cfg.Daemon != 0 {
 		return fmt.Errorf("DAEMON interval too small: %d", cfg.Daemon)
+	}
+
+	if cfg.DaemonError < MinimumDaemon {
+		return fmt.Errorf("DAEMON_ERROR interval too small: %d", cfg.DaemonError)
 	}
 
 	return nil

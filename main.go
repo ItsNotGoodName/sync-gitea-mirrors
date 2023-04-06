@@ -60,9 +60,15 @@ func main() {
 
 	fmt.Printf("SyncConfig: %+v\n", syncConfig)
 
-	if cfg.Daemon != 0 {
+	if cfg.Daemon == 0 {
+		// Normal
+		if err := run(cfg, &syncConfig); err != nil {
+			log.Fatal("main", zap.Error(err))
+		}
+	} else {
 		// Daemon
 		interval := time.Duration(cfg.Daemon) * time.Second
+		errorInterval := time.Duration(cfg.DaemonError) * time.Second
 
 		if cfg.DaemonSkipFirst {
 			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
@@ -75,16 +81,15 @@ func main() {
 					log.Fatal("main", zap.Error(err))
 				}
 				log.Error("main", zap.Error(err))
-			}
 
-			fmt.Println("Sleeping for", cfg.Daemon, "seconds")
-			time.Sleep(interval)
+				fmt.Println("Sleeping for", cfg.DaemonError, "seconds due to error")
+				time.Sleep(errorInterval)
+			} else {
+				fmt.Println("Sleeping for", cfg.Daemon, "seconds")
+				time.Sleep(interval)
+			}
 		}
-	} else {
-		// Normal
-		if err := run(cfg, &syncConfig); err != nil {
-			log.Fatal("main", zap.Error(err))
-		}
+
 	}
 }
 
@@ -102,6 +107,8 @@ func run(cfg *config.Config, syncConfig *tea.SyncConfig) error {
 	}
 
 	fmt.Printf("Will sync %d repositories\n", len(repos))
+
+	syncingError := false
 
 Loop:
 	for _, repo := range repos {
@@ -123,6 +130,7 @@ Loop:
 		teaRepo, err := tea.GetRepoOrNil(client, owner, name)
 		if err != nil {
 			log.Error("could not get destination repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+			syncingError = true
 			continue
 		}
 
@@ -141,6 +149,7 @@ Loop:
 
 			if teaRepo, _, err = client.MigrateRepo(opts); err != nil {
 				log.Error("could not migrate repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+				syncingError = true
 				continue
 			}
 		} else if !repo.IsMyMirror(teaRepo) {
@@ -153,6 +162,7 @@ Loop:
 		output, err := tea.Sync(client, teaRepo, &repo.SyncRepository, syncConfig)
 		if err != nil {
 			log.Error("could not sync repo", zap.String("owner", owner), zap.String("name", name), zap.Error(err))
+			syncingError = true
 			continue
 		}
 
@@ -171,6 +181,10 @@ Loop:
 		if output.UpdateVisibility {
 			fmt.Println("~ Updated visibility")
 		}
+	}
+
+	if syncingError {
+		return fmt.Errorf("error occurred when syncing")
 	}
 
 	return nil

@@ -7,6 +7,7 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | Environment Variable       | Default  | Required         | Description                                                                                                         |
 | -------------------------- | -------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `DAEMON`                   | 0        |                  | Seconds between each run where 0 means running only once (e.g. `86400` is a day).                                   |
+| `DAEMON_ERROR`             | 300      |                  | Seconds between each run when error occurs (e.g. "300" is a 5 minutes).                                             |
 | `DAEMON_SKIP_FIRST`        | false    |                  | Skip first daemon run.                                                                                              |
 | `DAEMON_EXIT_ERROR`        | false    |                  | Exit daemon when error occurs.                                                                                      |
 | `GITHUB_OWNER`<sub>1</sub> | ""       |                  | Owner of GitHub source repositories.                                                                                |
