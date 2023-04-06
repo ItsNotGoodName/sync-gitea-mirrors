@@ -18,7 +18,6 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 | `SKIP_REPOS`               | ""                  |                  | List of space seperated repositories to not sync (e.g. `repo1 repo2 repo3`).      |
 | `SKIP_FORKS`               | false               |                  | Skip fork repositories.                                                           |
 | `SKIP_PRIVATE`             | false               |                  | Skip private repositories.                                                        |
-| `MIGRATE_ALL`              | false               |                  | Migrate every item.                                                               |
 | `MIGRATE_WIKI`             | false               |                  | Migrate wiki from source repositories.                                            |
 | `MIGRATE_LFS`              | false               |                  | Migrate lfs from source repositories.                                             |
 | `SYNC_ALL`                 | false               |                  | Sync everything.                                                                  |
@@ -37,7 +36,7 @@ Sync and mirror GitHub/Gitea repositories to Gitea.
 # GitHub to Gitea Example
 
 Sync repositories from GitHub to a Gitea instance that is located at `https://gitea.example.com` on a daily interval.
-If a repository does not exist in Gitea then it will create a migration that includes wiki and lfs.
+If a repository does not exist in Gitea then it will create a migration.
 It will sync description, topics, and visiblity.
 If the GitHub repository is archived then it will set the `mirror-interval` to `0s` in the Gitea repository.
 
@@ -52,7 +51,6 @@ sync-gitea-mirrors \
   -dest-url="https://gitea.example.com" \
   -dest-token="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" \
   -sync-all \
-  -migrate-all \
   -daemon=86400
 ```
 
@@ -69,7 +67,6 @@ services:
       DEST_URL: https://gitea.example.com
       DEST_TOKEN: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
       SYNC_ALL: true
-      MIGRATE_ALL: true
       DAEMON: 86400
     user: 1000:1000
     restart: unless-stopped
@@ -86,7 +83,6 @@ docker run -d \
   -e DEST_URL="https://gitea.example.com" \
   -e DEST_TOKEN="BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" \
   -e SYNC_ALL=true \
-  -e MIGRATE_ALL=true \
   -e DAEMON=86400 \
   ghcr.io/itsnotgoodname/sync-gitea-mirrors:latest
 ```

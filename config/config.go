@@ -39,7 +39,6 @@ type Config struct {
 	SkipForks   bool     `env:"SKIP_FORKS"`
 	SkipPrivate bool     `env:"SKIP_PRIVATE"`
 
-	MigrateAll  bool `env:"MIGRATE_ALL"`
 	MigrateWiki bool `env:"MIGRATE_WIKI"`
 	MigrateLFS  bool `env:"MIGRATE_LFS"`
 
@@ -72,7 +71,6 @@ func New() *Config {
 	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "repo1 repo2 repo3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
-	flag.BoolVar(&cfg.MigrateAll, "migrate-all", false, "Migrate every item.")
 	flag.BoolVar(&cfg.MigrateWiki, "migrate-wiki", false, "Migrate wiki from source repositories.")
 	flag.BoolVar(&cfg.MigrateLFS, "migrate-lfs", false, "Migrate lfs from source repositories.")
 	flag.BoolVar(&cfg.SyncAll, "sync-all", false, "Sync everything.")
@@ -100,11 +98,6 @@ func (cfg *Config) ParseAndValidate() error {
 	// keep daemon error less than or equal to daemon
 	if cfg.DaemonError > cfg.Daemon {
 		cfg.DaemonError = cfg.Daemon
-	}
-
-	if cfg.MigrateAll {
-		cfg.MigrateWiki = true
-		cfg.MigrateLFS = true
 	}
 
 	if cfg.SyncAll {
