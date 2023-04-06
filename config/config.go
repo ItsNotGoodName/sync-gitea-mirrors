@@ -10,6 +10,7 @@ import (
 
 const DefaultDestMirrorInterval = "8h0m0s"
 const MinimumDaemon = 60
+const GiteaURL = "https://gitea.com"
 
 type Source string
 
@@ -66,7 +67,7 @@ func New() *Config {
 	flag.StringVar(&cfg.GitHubToken, "github-token", "", "Token for accessing GitHub.")
 	flag.StringVar(&cfg.GiteaOwner, "gitea-owner", "", "Owner of Gitea source repositories.")
 	flag.StringVar(&cfg.GiteaToken, "gitea-token", "", "Token for accessing the source Gitea instance.")
-	flag.StringVar(&cfg.GiteaURL, "gitea-url", "", "URL of the source Gitea instance.")
+	flag.StringVar(&cfg.GiteaURL, "gitea-url", GiteaURL, "URL of the source Gitea instance.")
 	skipRepos := flag.String("skip-repos", "", `List of space seperated repositories to not sync (e.g. "ItsNotGoodName/example1 itsnotgoodname/example2 example3").`)
 	flag.BoolVar(&cfg.SkipForks, "skip-forks", false, "Skip fork repositories.")
 	flag.BoolVar(&cfg.SkipPrivate, "skip-private", false, "Skip private repositories.")
